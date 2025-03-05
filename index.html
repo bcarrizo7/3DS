@@ -565,7 +565,7 @@
             slider.style.transform = `translateX(${position}px)`;
 
             let animationId;
-            const speed = 0.7;
+            const speed = window.innerWidth <= 1024 ? 1.2 : 0.7; // Duplicar velocidad en móviles
 
             function moveCarousel() {
                 position -= speed;
