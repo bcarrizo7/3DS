@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3DS - Si puedes imaginarlo, podemos diseñarlo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <style>
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        #particles-js, #collab-particles, #navbar-particles { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 1; }
+        #three-container { width: 300px; height: 300px; margin: 0 auto 20px; position: relative; z-index: 5; }
+        .content-container { position: relative; z-index: 10; }
+        .glow-text { text-shadow: 0 0 10px rgba(250, 204, 21, 0.7); }
+        .tech-border { border: 1px solid rgba(250, 204, 21, 0.3); box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+        .tech-card { backdrop-filter: blur(10px); background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(250, 204, 21, 0.3); transition: all 0.3s ease; }
+        .tech-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(250, 204, 21, 0.2); }
+        .grid-pattern { background-image: linear-gradient(rgba(250, 204, 21, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(250, 204, 21, 0.05) 1px, transparent 1px); background-size: 20px 20px; }
+        .radial-background { background: radial-gradient(circle, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.9) 30%, rgba(0, 0, 0, 1) 100%); }
+
+        /* Animaciones de scroll */
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .scale-in { opacity: 0; transform: scale(0.9); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .scale-in.visible { opacity: 1; transform: scale(1); }
+        .slide-in-left { opacity: 0; transform: translateX(-50px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .slide-in-left.visible { opacity: 1; transform: translateX(0); }
+        .slide-in-right { opacity: 0; transform: translateX(50px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .slide-in-right.visible { opacity: 1; transform: translateX(0); }
+        .stagger-in > * { opacity: 0; transform: translateY(20px); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .stagger-in.visible > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        .stagger-in.visible > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
+        .stagger-in.visible > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
+        .stagger-in.visible > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
+
+        /* Menú móvil */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(17, 24, 39, 0.98);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        .mobile-menu.active {
+            display: flex;
+        }
+        .mobile-menu a {
+            margin: 15px 0;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 10px 20px;
+            width: 80%;
+            background: rgba(250, 204, 21, 0.1);
+            border-radius: 10px;
+            color: #facc15;
+            text-shadow: 0 0 5px rgba(250, 204, 21, 0.7);
+            transition: all 0.3s ease;
+        }
+        .mobile-menu a:hover {
+            background: rgba(250, 204, 21, 0.3);
+            transform: scale(1.05);
+            color: #fff;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.9);
+        }
+
+        /* Ocultar elementos del navbar al abrir el menú móvil */
+        .navbar-hero .container {
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        .navbar-hero .logo-container,
+        .navbar-hero .social-links,
+        .navbar-hero .desktop-menu {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .navbar-hero .container.active .logo-container,
+        .navbar-hero .container.active .social-links,
+        .navbar-hero .container.active .desktop-menu {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            z-index: 101;
+            padding: 10px;
+        }
+
+        /* Colaboraciones */
+        .collab-container { overflow: hidden; position: relative; padding: 30px 0; width: 100%; }
+        .collab-slider { display: flex; position: relative; width: max-content; }
+        .collab-item { display: inline-flex; align-items: center; justify-content: center; margin: 0 20px; width: 150px; height: 120px; position: relative; }
+        .collab-item img { max-width: 100%; max-height: 100px; object-fit: contain; filter: grayscale(50%); transition: all 0.3s ease; }
+        .collab-item img:hover { filter: grayscale(0); transform: scale(1.4); z-index: 10; }
+
+        @media (max-width: 1024px) {
+            .desktop-menu { display: none !important; }
+            .hamburger { display: block !important; }
+            .mobile-menu.active { display: flex; }
+            #three-container { width: 200px; height: 200px; }
+            .navbar-hero .container { justify-content: space-between; }
+            .navbar-hero .logo-container { margin-right: 0; }
+            .gradient-text { font-size: 2xl; }
+            .navbar-hero .social-links { flex-direction: row; gap: 1rem; }
+        }
+
+        @media (min-width: 1025px) {
+            .desktop-menu { display: flex !important; }
+            .hamburger { display: none !important; }
+            .navbar-hero { padding: 1.5rem 0; }
+            .navbar-hero .container { display: flex; justify-content: space-between; align-items: center; max-width: 100%; padding: 0 2rem; }
+            .navbar-hero .logo-container { margin-right: 2rem; }
+            .navbar-hero .desktop-menu { flex-grow: 1; display: flex; justify-content: center; gap: 2rem; }
+            .navbar-hero .social-links { display: flex; gap: 1.5rem; margin-left: auto; padding-right: 0; }
+            .desktop-menu a { font-size: 1.25rem; padding: 0 1rem; }
+            .gradient-text { font-size: 3.5rem; }
+        }
+
+        /* Gradiente para texto */
+        .gradient-text {
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 25%, #fad0c4 50%, #a18cd1 75%, #fbc2eb 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+            line-height: 1.3;
+            white-space: pre-line;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Estilo para botones épicos */
+        .epic-button {
+            position: relative;
+            border: 2px solid #facc15;
+            color: #facc15;
+            background: transparent;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+        .epic-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(250, 204, 21, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+        .epic-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        .epic-button:hover {
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.7), 0 0 40px rgba(250, 204, 21, 0.5), inset 0 0 10px rgba(250, 204, 21, 0.8);
+            transform: translateY(-3px);
+            color: #1f2937;
+            background-color: #facc15;
+            text-shadow: 0 0 5px rgba(250, 204, 21, 0.8);
+        }
+
+        /* Hero content */
+        .hero-content { display: flex; flex-direction: column; align-items: center; gap: 20px; min-height: 650px; }
+        .typing-container { height: 150px; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; position: relative; }
+        #typing-text { display: block; text-align: center; max-height: 100%; }
+
+        /* Íconos sociales */
+        .social-icon { transition: all 0.3s ease; color: #facc15; }
+        .social-icon:hover { transform: scale(1.2); text-shadow: 0 0 10px rgba(250, 204, 21, 0.7); }
+
+        /* Ajustes para navbar */
+        .navbar-hero.scrolled {
+            border-top: 1px solid rgba(250, 204, 21, 0.3);
+            box-shadow: 0 -5px 15px rgba(250, 204, 21, 0.2);
+        }
+
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full navbar-hero bg-transparent shadow-lg z-50" id="navbar">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="logo-container">
+                <div class="text-2xl font-bold text-yellow-400 glow-text">3DS</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="social-links flex items-center gap-2">
+                    <a href="https://www.instagram.com/the_3dimension/" target="_blank" class="social-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7.75 2h8.5A5.25 5.25 0 0121.5 7.25v8.5A5.25 5.25 0 0116.25 21h-8.5A5.25 5.25 0 012.5 15.75v-8.5A5.25 5.25 0 017.75 2zm6.5 2.5a1 1 0 100 2 1 1 0 000-2zm-2.25 3a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm0 2a2.5 2.5 0 110 5 2.5 2.5 0 010-5z"/>
+                        </svg>
+                    </a>
+                    <a href="https://www.tiktok.com/@the_3dimension" target="_blank" class="social-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.33.04-4.61-.79-5.94-2.71-1.33-1.92-1.78-4.31-1.34-6.71.44-2.4 1.88-4.33 4.05-5.38.76-.37 1.57-.62 2.38-.75v4.03c-.79.13-1.59.37-2.33.73-1.17.58-2.06 1.63-2.46 2.91-.4 1.28-.31 2.62.25 3.82.56 1.2 1.62 2.09 2.9 2.47 1.28.38 2.62.29 3.82-.27 1.2-.56 2.09-1.62 2.47-2.9.38-1.28.29-2.62-.27-3.82V.02h.02z"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </div>
+            </div>
+            <div class="desktop-menu hidden md:flex items-center gap-6">
+                <a href="#inicio" class="hover:text-yellow-400 transition duration-300">Inicio</a>
+                <a href="#servicios" class="hover:text-yellow-400 transition duration-300">Servicios</a>
+                <a href="#galeria" class="hover:text-yellow-400 transition duration-300">Galería</a>
+                <a href="#nosotros" class="hover:text-yellow-400 transition duration-300">Nosotros</a>
+                <a href="#colaboraciones" class="hover:text-yellow-400 transition duration-300">Colaboraciones</a>
+                <a href="#contacto" class="hover:text-yellow-400 transition duration-300">Contacto</a>
+            </div>
+            <div id="mobileMenu" class="mobile-menu">
+                <a href="#inicio" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Inicio</a>
+                <a href="#servicios" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Servicios</a>
+                <a href="#galeria" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Galería</a>
+                <a href="#nosotros" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Nosotros</a>
+                <a href="#colaboraciones" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Colaboraciones</a>
+                <a href="#contacto" onclick="toggleMobileMenu()" class="hover:text-yellow-400 transition duration-300">Contacto</a>
+            </div>
+        </div>
+        <div id="navbar-particles"></div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="h-screen flex items-center justify-center radial-background grid-pattern text-center">
+        <div id="particles-js"></div>
+        <div class="content-container hero-content">
+            <div id="three-container"></div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-yellow-400 mb-4 glow-text">3DS</h1>
+            <div class="typing-container mb-8">
+                <span id="typing-text" class="gradient-text text-2xl md:text-4xl"></span>
+            </div>
+            <a href="#galeria" id="explore-button" class="epic-button">Explora Modelos</a>
+        </div>
+    </section>
+
+    <!-- Servicios -->
+    <section id="servicios" class="py-16 bg-gray-800 grid-pattern relative">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-yellow-400 mb-12 glow-text fade-in">Nuestros Servicios</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 stagger-in">
+                <div class="tech-card p-6 rounded-lg shadow-lg text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-400/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 text-yellow-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-2">Modelado 3D</h3>
+                    <p>Creamos diseños únicos para ti.</p>
+                </div>
+                <div class="tech-card p-6 rounded-lg shadow-lg text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-400/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 text-yellow-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.221-.29.349-.634.349-1.003 0-1.036-1.007-1.875-2.25-1.875s-2.25.84-2.25 1.875c0 .369.128.713.349 1.003.215.283.401.604.401.959v0a.64.64 0 0 1-.657.643 48.39 48.39 0 0 1-4.163-.3c.186 1.613.293 3.25.315 4.907a.656.656 0 0 1-.658.663v0c-.355 0-.676-.186-.959-.401a1.647 1.647 0 0 0-1.003-.349c-1.036 0-1.875 1.007-1.875 2.25s.84 2.25 1.875 2.25c.369 0 .713-.128 1.003-.349.283-.215.604-.401.959-.401v0c.31 0 .555.26.532.57a48.039 48.039 0 0 1-.642 5.056c1.518.19 3.058.309 4.616.354a.64.64 0 0 0 .657-.643v0c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.035 1.008-1.875 2.25-1.875 1.243 0 2.25.84 2.25 1.875 0 .369-.128.713-.349 1.003-.215.283-.4.604-.4.959v0c0 .333.277.599.61.58a48.1 48.1 0 0 0 5.427-.63 48.05 48.05 0 0 0 .582-4.717.532.532 0 0 0-.533-.57v0c-.355 0-.676.186-.959.401-.29.221-.634.349-1.003.349-1.035 0-1.875-1.007-1.875-2.25s.84-2.25 1.875-2.25c.37 0 .713.128 1.003.349.283.215.604.401.96.401v0a.656.656 0 0 0 .658-.663 48.422 48.422 0 0 0-.37-5.36c-1.886.342-3.81.574-5.766.689a.578.578 0 0 1-.61-.58v0Z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-2">Impresión 3D Personalizada</h3>
+                    <p>Imprimimos con PLA, PETG, TPU y ABS.</p>
+                </div>
+                <div class="tech-card p-6 rounded-lg shadow-lg text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-400/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-2">Robótica Aplicada</h3>
+                    <p>Detección de casas y bebés en peligro.</p>
+                </div>
+                <div class="tech-card p-6 rounded-lg shadow-lg text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-400/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 text-yellow-400">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-2">Cursos</h3>
+                    <p>Te guiamos en el arte del 3D.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Galería -->
+    <section id="galeria" class="py-16 bg-gray-900 grid-pattern">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-yellow-400 mb-12 glow-text fade-in">Nuestros Modelos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="tech-card p-4 rounded-lg slide-in-left">
+                    <div class="relative overflow-hidden rounded mb-4 tech-border" style="padding-top: 75%;">
+                        <img src="img/Modelos/llavero nfc chile.webp" alt="🔑 LLAVEROS NFC" class="absolute top-0 left-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-yellow-400/5"></div>
+                    </div>
+                    <p class="text-center">🔑 <span class="text-yellow-400 font-semibold">LLAVEROS NFC</span> 🚀<br><span class="gradient-text text-base">COMPARTE TUS REDES EN UN INSTANTE!</span></p>
+                </div>
+                <div class="tech-card p-4 rounded-lg scale-in">
+                    <div class="relative overflow-hidden rounded mb-4 tech-border" style="padding-top: 75%;">
+                        <img src="img/Modelos/david macetero 3d.webp" alt="🌱 MACETEROS PERSONALIZADOS" class="absolute top-0 left-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-yellow-400/5"></div>
+                    </div>
+                    <p class="text-center">🏡 <span class="text-yellow-400 font-semibold">DECORACIONES PARA TU HOGAR</span> 🌿<br><span class="gradient-text text-base">TU ESPACIO, TU ESTILO!</span></p>
+                </div>
+                <div class="tech-card p-4 rounded-lg slide-in-right">
+                    <div class="relative overflow-hidden rounded mb-4 tech-border" style="padding-top: 75%;">
+                        <img src="img/Modelos/escalas.webp" alt="🗺️ ESCALAS NORTE" class="absolute top-0 left-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-yellow-400/5"></div>
+                    </div>
+                    <p class="text-center">🗺️ <span class="text-yellow-400 font-semibold">ESCALAS NORTE</span> ⚒️<br><span class="gradient-text text-base">ORIENTACIÓN Y MEDICIÓN EN TUS HALLAZGOS</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nosotros -->
+    <section id="nosotros" class="py-16 bg-gray-800 grid-pattern">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold text-yellow-400 mb-6 glow-text fade-in">¿Quiénes Somos?</h2>
+            <p class="text-lg max-w-2xl mx-auto mb-12 fade-in">
+                En <span class="text-yellow-400 font-semibold">3DS</span>, transformamos tus sueños en realidad con tecnología de punta. 💡✨ Somos apasionados por la impresión 3D y expertos en materiales como <span class="text-yellow-400">PLA</span>, <span class="text-yellow-400">PETG</span> y <span class="text-yellow-400">ABS</span>. 🛠️ Nuestra misión es innovar y crear sin límites, llevando tus ideas al siguiente nivel. 🚀 ¿Tienes un proyecto en mente? ¡Nosotros lo hacemos realidad! 🔥
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto mt-12">
+                <div class="tech-card p-6 rounded-lg slide-in-left">
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-48 h-48 md:w-64 md:h-64 mb-4">
+                            <div class="absolute inset-0 rounded-full overflow-hidden" style="background: radial-gradient(circle, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.9) 30%, rgba(0, 0, 0, 1) 100%);"></div>
+                            <div id="particles-benjamin" class="absolute inset-0 rounded-full overflow-hidden"></div>
+                            <img src="img/integrantes/Benjamin carrizo.png" alt="Benjamín" class="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-yellow-400/50">
+                        </div>
+                        <h3 class="text-xl font-semibold text-yellow-400 mb-2">Benjamín Carrizo</h3>
+                        <p class="gradient-text text-lg font-medium mb-2">Chief Executive Officer</p>
+                        <p class="text-gray-300">Experto en modelado y prototipado 3D 🎨🖌️</p>
+                    </div>
+                </div>
+                <div class="tech-card p-6 rounded-lg slide-in-right">
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-48 h-48 md:w-64 md:h-64 mb-4">
+                            <div class="absolute inset-0 rounded-full overflow-hidden" style="background: radial-gradient(circle, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.9) 30%, rgba(0, 0, 0, 1) 100%);"></div>
+                            <div id="particles-marco" class="absolute inset-0 rounded-full overflow-hidden"></div>
+                            <img src="img/integrantes/marco minniti.png" alt="Marco" class="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-yellow-400/50">
+                        </div>
+                        <h3 class="text-xl font-semibold text-yellow-400 mb-2">Marco Minniti</h3>
+                        <p class="gradient-text text-lg font-medium mb-2">Chief Operating Officer</p>
+                        <p class="text-gray-300">Experto en materiales y técnicas de acabado 🛠️🔧</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Colaboraciones -->
+    <section id="colaboraciones" class="py-16 radial-background grid-pattern relative">
+        <div id="collab-particles"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h2 class="text-4xl font-bold text-yellow-400 mb-12 glow-text fade-in">Colaboraciones</h2>
+            <div class="collab-container">
+                <div class="collab-slider" id="collabSlider">
+                    <div class="collab-item"><img src="img/Colaboraciones/universidad catolica.webp" alt="Colab 1"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/proyectae.webp" alt="Colab 2"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/mit_burger.webp" alt="Colab 3"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/logo_congreso_arq_2.webp" alt="Colab 4"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/D&Cgoup.webp" alt="Colab 5"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/Manos_a_la_obra.webp" alt="Colab 6"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/databam.webp" alt="Colab 7"></div>
+                    <div class="collab-item"><img src="img/Colaboraciones/block_aceros_industriales.webp" alt="Colab 8"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto -->
+    <section id="contacto" class="py-16 bg-gray-900 grid-pattern">
+        <div class="container mx-auto px-4">
+            <h2 class="text-4xl font-bold text-center text-yellow-400 mb-12 glow-text fade-in">Contáctanos</h2>
+            <form action="https://formspree.io/f/mnnjewza" method="POST" class="max-w-lg mx-auto space-y-4 scale-in">
+                <input type="text" name="name" placeholder="Nombre" class="w-full p-3 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 tech-border" required>
+                <input type="email" name="email" placeholder="Correo" class="w-full p-3 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 tech-border" required>
+                <textarea name="message" placeholder="Mensaje" class="w-full p-3 bg-gray-800 rounded-lg h-32 focus:outline-none focus:ring-2 focus:ring-yellow-400 tech-border" required></textarea>
+                <button type="submit" class="epic-button w-full">Enviar</button>
+            </form>
+        </div>
+    </section>
+
+        <!-- Footer -->
+    <footer class="bg-gray-800 py-6 tech-border">
+        <div class="container mx-auto px-4 text-center">
+            <div class="text-2xl font-bold text-yellow-400 glow-text mb-4">3DS</div>
+            <p class="text-sm">© 2025 3DS. Todos los derechos reservados.</p>
+            <p class="text-sm">Contacto: <a href="mailto:ayoproduction7@gmail.com">ayoproduction7@gmail.com</a> | +56 9 99917833</p>
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script>
+        // Configuración de particles.js
+        function initParticles(containerId) {
+            particlesJS(containerId, {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: '#facc15' },
+                    shape: { type: 'circle' },
+                    opacity: { value: 0.5, random: true, anim: { enable: true, speed: 1, opacity_min: 0.1 } },
+                    size: { value: 3, random: true, anim: { enable: true, speed: 2, size_min: 0.1 } },
+                    line_linked: { enable: true, distance: 150, color: '#facc15', opacity: 0.2, width: 1 },
+                    move: { enable: true, speed: 1, direction: 'none', random: true, straight: false, out_mode: 'out' }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: { onhover: { enable: true, mode: 'bubble' }, onclick: { enable: true, mode: 'repulse' }, resize: true },
+                    modes: { bubble: { distance: 200, size: 6, duration: 2, opacity: 0.8 }, repulse: { distance: 200, duration: 0.4 } }
+                },
+                retina_detect: true
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initParticles('particles-js');
+            initParticles('collab-particles');
+            initParticles('particles-benjamin');
+            initParticles('particles-marco');
+            initParticles('navbar-particles');
+            setupInfiniteCarousel();
+            initTypingEffect();
+            updateNavbarBackground();
+        });
+
+        // Configuración de Three.js
+        let scene, camera, renderer, cube;
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 300/300, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(300, 300);
+            renderer.setClearColor(0x000000, 0);
+            document.getElementById('three-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0xfacc15, wireframe: true });
+            cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+            camera.position.z = 3;
+
+            document.addEventListener('mousemove', onMouseMove, false);
+            animate();
+        }
+
+        function onMouseMove(event) {
+            const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            cube.rotation.y = mouseX * Math.PI;
+            cube.rotation.x = mouseY * Math.PI;
+
+            const cubeRect = document.getElementById('three-container').getBoundingClientRect();
+            const cubeCenterX = cubeRect.left + cubeRect.width / 2;
+            const cubeCenterY = cubeRect.top + cubeRect.height / 2;
+            const dx = event.clientX - cubeCenterX;
+            const dy = event.clientY - cubeCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+            const normalizedDistance = Math.min(distance / maxDistance, 1);
+            const newSize = 0.6 + normalizedDistance * (1.8 - 0.6);
+            cube.scale.set(newSize, newSize, newSize);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            cube.rotation.y += 0.003;
+            cube.rotation.x += 0.003;
+            renderer.render(scene, camera);
+        }
+
+        init();
+
+        // Efecto de escritura y botón
+        function initTypingEffect() {
+            const text = "Si puedes imaginarlo ✨,\npodemos imprimirlo 🚀";
+            const typingTextElement = document.getElementById('typing-text');
+            const exploreButton = document.getElementById('explore-button');
+            let i = 0;
+
+            function typeWriter() {
+                if (i < text.length) {
+                    if (text.charAt(i) === '\n') {
+                        typingTextElement.innerHTML += '<br>';
+                    } else {
+                        typingTextElement.innerHTML += text.charAt(i);
+                    }
+                    i++;
+                    setTimeout(typeWriter, 70);
+                } else {
+                    gsap.to(exploreButton, { opacity: 1, y: -20, duration: 0.8, ease: "power2.out" });
+                    gsap.to(document.querySelector('#contacto .epic-button'), { opacity: 1, duration: 0.8, ease: "power2.out" });
+                }
+            }
+
+            setTimeout(typeWriter, 250);
+        }
+
+        // Animaciones al scroll
+        function checkScroll() {
+            const elements = document.querySelectorAll('.fade-in, .scale-in, .slide-in-left, .slide-in-right, .stagger-in');
+            elements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.9) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('load', checkScroll);
+        window.addEventListener('scroll', checkScroll);
+
+        // Scroll suave
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Toggle menú móvil
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const container = document.querySelector('.navbar-hero .container');
+            mobileMenu.classList.toggle('active');
+            container.classList.toggle('active');
+        }
+
+        // Carrusel infinito
+        function setupInfiniteCarousel() {
+            const slider = document.getElementById('collabSlider');
+            const items = Array.from(slider.children);
+            const itemCount = items.length;
+
+            for (let i = 0; i < 3; i++) {
+                items.forEach(item => slider.appendChild(item.cloneNode(true)));
+            }
+
+            const itemWidth = items[0].offsetWidth + parseInt(window.getComputedStyle(items[0]).marginLeft) + parseInt(window.getComputedStyle(items[0]).marginRight);
+            const totalWidth = itemWidth * itemCount;
+            let position = -totalWidth;
+            slider.style.transform = `translateX(${position}px)`;
+
+            let animationId;
+            const speed = 0.7;
+
+            function moveCarousel() {
+                position -= speed;
+                if (position <= -totalWidth * 2) {
+                    position += totalWidth;
+                    slider.style.transition = 'none';
+                    slider.style.transform = `translateX(${position}px)`;
+                    slider.offsetHeight;
+                    slider.style.transition = 'transform 0.1s linear';
+                } else {
+                    slider.style.transform = `translateX(${position}px)`;
+                }
+                animationId = requestAnimationFrame(moveCarousel);
+            }
+
+            slider.style.transition = 'transform 0.1s linear';
+            moveCarousel();
+
+            const container = document.querySelector('.collab-container');
+            container.addEventListener('mouseenter', () => cancelAnimationFrame(animationId));
+            container.addEventListener('mouseleave', () => animationId = requestAnimationFrame(moveCarousel));
+        }
+
+        // Actualizar fondo del navbar al hacer scroll
+        function updateNavbarBackground() {
+            const navbar = document.getElementById('navbar');
+            const scrollPosition = window.scrollY;
+
+            if (scrollPosition === 0) {
+                navbar.style.background = 'transparent';
+                navbar.classList.remove('scrolled');
+                document.getElementById('navbar-particles').style.display = 'none';
+            } else {
+                navbar.style.background = 'radial-gradient(circle, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, 0.9) 30%, rgba(0, 0, 0, 1) 100%)';
+                navbar.classList.add('scrolled');
+                document.getElementById('navbar-particles').style.display = 'block';
+            }
+        }
+
+        window.addEventListener('scroll', updateNavbarBackground);
+    </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91ab72ec3c755a52',t:'MTc0MTAyOTE4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'91abb3bb5e85bfaa',t:'MTc0MTAzMTgzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>
