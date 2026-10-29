@@ -234,6 +234,11 @@
             margin-top: 16px;
         }
 
+        /* Scrollbar para modales */
+        .modal-content::-webkit-scrollbar { width: 8px; }
+        .modal-content::-webkit-scrollbar-track { background: rgba(17, 24, 39, 0.5); border-radius: 4px; }
+        .modal-content::-webkit-scrollbar-thumb { background: rgba(250, 204, 21, 0.5); border-radius: 4px; }
+        .modal-content::-webkit-scrollbar-thumb:hover { background: rgba(250, 204, 21, 0.8); }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans">
@@ -447,21 +452,151 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 py-6 tech-border">
+    <footer class="bg-gray-800 py-8 tech-border relative z-20">
         <div class="container mx-auto px-4 text-center">
-            <div class="text-2xl font-bold text-yellow-400 glow-text mb-4">3DS.cl</div>
-            <p class="text-sm">© 2025 3Dimension Solutions SpA.</p>
-            <p class="text-sm">Contacto: <a href="mailto:info@3ds.cl">info@3ds.cl</a> | +56 9 99917833</p>
-            <p class="text-xs text-gray-400 mt-4">Términos y Condiciones: Somos una empresa chilena con RUT 78.122.652-1.</p>
+            <div class="text-3xl font-bold text-yellow-400 glow-text mb-4">3DS.cl</div>
+            <p class="text-sm mb-2">© 2025 3Dimension Solutions SpA.</p>
+            <p class="text-sm mb-6">Contacto: <a href="mailto:info@3ds.cl" class="hover:text-yellow-400 transition">info@3ds.cl</a> | +56 9 99917833</p>
+            
+            <!-- Enlaces a Modales de Políticas (Reemplaza el texto estático anterior) -->
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4 text-xs text-gray-400 pt-4 border-t border-gray-700 w-full max-w-2xl mx-auto">
+                <button onclick="openModal('modal-terminos')" class="hover:text-yellow-400 transition duration-300">Términos y Condiciones</button>
+                <span class="hidden md:inline">|</span>
+                <button onclick="openModal('modal-privacidad')" class="hover:text-yellow-400 transition duration-300">Políticas de Privacidad</button>
+            </div>
         </div>
     </footer>
 
+    <!-- Botón Flotante de WhatsApp -->
     <a href="https://wa.me/56999917833?text=¡Hola!" class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp whatsapp-icon"></i>
     </a>
+
+    <!-- ============================================== -->
+    <!-- MODALES DE TÉRMINOS Y POLÍTICAS DE PRIVACIDAD  -->
+    <!-- ============================================== -->
+
+    <!-- Modal: Términos y Condiciones -->
+    <div id="modal-terminos" class="fixed inset-0 bg-black bg-opacity-80 z-[2000] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <!-- Overlay click para cerrar -->
+        <div class="absolute inset-0" onclick="closeModal('modal-terminos')"></div>
+        
+        <div class="bg-gray-800 border border-yellow-400/50 rounded-lg max-w-2xl w-full p-6 relative shadow-[0_0_20px_rgba(250,204,21,0.2)] max-h-[85vh] overflow-y-auto modal-content transform scale-95 transition-transform duration-300">
+            <button onclick="closeModal('modal-terminos')" class="absolute top-4 right-4 text-gray-400 hover:text-white transition bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-yellow-400 mb-6 border-b border-gray-700 pb-2">Términos y Condiciones</h2>
+            
+            <div class="text-gray-300 space-y-4 text-sm text-left leading-relaxed">
+                <p>Bienvenido a 3DS.cl. Al acceder y utilizar este sitio web, usted acepta cumplir con los siguientes términos y condiciones de uso.</p>
+                
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">1. Identificación de la Empresa</h3>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li><strong>Razón Social:</strong> 3Dimension Solutions SpA.</li>
+                    <li><strong>RUT:</strong> 78.122.652-1</li>
+                    <li><strong>Dirección Comercial:</strong> AV. SAN CARLOS DE APOQUINDO Nº 2880, Santiago, Chile.</li>
+                </ul>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">2. Servicios y Productos</h3>
+                <p>3Dimension Solutions SpA ofrece servicios de modelado 3D, impresión 3D personalizada con diversos materiales (PLA, PETG, TPU, ABS), robótica aplicada y desarrollo de software a medida.</p>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">3. Política de Reembolso (Productos 3D)</h3>
+                <p>Nuestra prioridad es la calidad de nuestros servicios. Ofrecemos una <strong>garantía y política de reembolso de 30 días</strong> desde la fecha de entrega para todos nuestros productos impresos en 3D que presenten defectos de fabricación demostrables o que no cumplan con las especificaciones técnicas acordadas. Los reembolsos no aplican por desgaste normal o mal uso del producto por parte del cliente.</p>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">4. Soporte y Desarrollo de Software</h3>
+                <p>Para cualquier duda, asistencia técnica, reporte de errores o consultas relacionadas exclusivamente con nuestros <strong>softwares creados</strong> y servicios digitales, por favor envíe un correo directamente a nuestro equipo técnico a: <a href="mailto:info@3ds.cl" class="text-yellow-400 hover:underline">info@3ds.cl</a>. Nos comprometemos a responder en un plazo de 48 horas hábiles.</p>
+                
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">5. Propiedad Intelectual</h3>
+                <p>Todo el contenido de este sitio (textos, imágenes, modelos 3D y código) es propiedad exclusiva de 3Dimension Solutions SpA. Se prohíbe su reproducción sin autorización previa.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Políticas de Privacidad -->
+    <div id="modal-privacidad" class="fixed inset-0 bg-black bg-opacity-80 z-[2000] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <!-- Overlay click para cerrar -->
+        <div class="absolute inset-0" onclick="closeModal('modal-privacidad')"></div>
+        
+        <div class="bg-gray-800 border border-yellow-400/50 rounded-lg max-w-2xl w-full p-6 relative shadow-[0_0_20px_rgba(250,204,21,0.2)] max-h-[85vh] overflow-y-auto modal-content transform scale-95 transition-transform duration-300">
+            <button onclick="closeModal('modal-privacidad')" class="absolute top-4 right-4 text-gray-400 hover:text-white transition bg-gray-700 rounded-full w-8 h-8 flex items-center justify-center">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-yellow-400 mb-6 border-b border-gray-700 pb-2">Políticas de Privacidad</h2>
+            
+            <div class="text-gray-300 space-y-4 text-sm text-left leading-relaxed">
+                <p>En <strong>3Dimension Solutions SpA (3DS.cl)</strong>, valoramos y respetamos su privacidad. Esta política describe cómo recopilamos, utilizamos y protegemos su información personal.</p>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">1. Recopilación de Información</h3>
+                <p>Recopilamos información personal (como nombre, correo electrónico y número de teléfono) únicamente cuando usted nos la proporciona voluntariamente a través de nuestros formularios de contacto, suscripciones a boletines o al realizar una consulta sobre nuestros servicios de impresión 3D o desarrollo de software.</p>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">2. Uso de la Información</h3>
+                <p>Los datos recopilados se utilizan exclusivamente para:</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Procesar sus solicitudes y responder a sus consultas.</li>
+                    <li>Brindar soporte técnico sobre productos físicos y software.</li>
+                    <li>Mejorar la experiencia de usuario en nuestro sitio web.</li>
+                    <li>Enviar actualizaciones relevantes sobre sus proyectos (si corresponde).</li>
+                </ul>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">3. Protección y Manejo de Datos</h3>
+                <p>No vendemos, alquilamos ni compartimos su información personal con terceros bajo ninguna circunstancia, salvo que sea requerido por la ley aplicable en el territorio chileno. Implementamos medidas de seguridad digitales para mantener su información a salvo de accesos no autorizados.</p>
+
+                <h3 class="text-yellow-400 font-semibold text-base mt-4">4. Derechos del Usuario</h3>
+                <p>Usted tiene derecho a solicitar el acceso, rectificación o eliminación de sus datos personales almacenados en nuestros sistemas en cualquier momento. Para ejercer estos derechos, por favor contáctenos a través de nuestro correo de soporte: <a href="mailto:info@3ds.cl" class="text-yellow-400 hover:underline">info@3ds.cl</a>.</p>
+                
+                <p class="text-xs text-gray-400 mt-6 italic">Última actualización: 2025.</p>
+            </div>
+        </div>
+    </div>
+
+
     <!-- JS -->
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
     <script>
+        // ==============================================
+        // LÓGICA DE LOS MODALES
+        // ==============================================
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            
+            // Mostrar modal
+            modal.classList.remove('hidden');
+            
+            // Pequeño delay para la animación de Tailwind
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+
+            // Bloquear scroll de la página de fondo
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            
+            // Animación de salida
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            
+            // Ocultar después de la transición
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // Restaurar scroll
+                document.body.style.overflow = 'auto';
+            }, 300);
+        }
+
+        // ==============================================
+        // RESTO DE TU CÓDIGO JS
+        // ==============================================
+
         // Configuración de particles.js
         function initParticles(containerId) {
             particlesJS(containerId, {
